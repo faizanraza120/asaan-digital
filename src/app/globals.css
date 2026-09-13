@@ -1,0 +1,229 @@
+@import "tailwindcss";
+
+/*
+ * Design system ported from the Lovable build (trionn-twin). Same palette,
+ * same type scale, same utilities, rewritten for Tailwind 4 under Next so
+ * the tokens live in one place instead of being split across @theme inline
+ * and :root the way the generated file had them.
+ *
+ * Accent rule: violet only ever touches something that responds to the
+ * visitor. CTAs, the charge ring in the hero, an open FAQ row, a live chat
+ * bubble. Everything else stays monochrome so the colour reads as "this is
+ * alive" rather than decoration.
+ */
+@theme {
+  --color-background: oklch(0.145 0.004 285);
+  --color-foreground: oklch(0.955 0.004 90);
+  --color-card: oklch(0.185 0.005 285);
+  --color-card-foreground: oklch(0.955 0.004 90);
+  --color-primary: oklch(0.62 0.25 288);
+  --color-primary-foreground: oklch(0.985 0 0);
+  --color-secondary: oklch(0.24 0.005 285);
+  --color-muted: oklch(0.24 0.005 285);
+  --color-muted-foreground: oklch(0.68 0.006 285);
+  --color-accent: oklch(0.62 0.25 288);
+  --color-border: oklch(1 0 0 / 12%);
+  --color-line: oklch(1 0 0 / 12%);
+  --color-input: oklch(1 0 0 / 16%);
+  --color-ring: oklch(0.62 0.25 288);
+
+  --radius: 0.125rem;
+
+  --font-display: var(--f-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--f-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--f-mono), ui-monospace, monospace;
+  /*
+   * ⚠ Placeholder. The wordmark is meant to be set in Lastborn Demo, but no
+   * font file has been supplied yet — it is not something safe to source
+   * from a random font-aggregator site given "Demo" cuts are typically
+   * personal-use-only licences, which this commercial site would violate.
+   * Falls back to the site's own display face until the real file arrives,
+   * at which point this is the only line that needs to change.
+   */
+  --font-logo: var(--f-logo, var(--f-display)), ui-sans-serif, system-ui,
+    sans-serif;
+
+  --ease-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+}
+
+/* Oversized headline treatment. Tight tracking, sub-1 line height. */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+  text-wrap: balance;
+}
+
+/* Every eyebrow and section label on the site. Mono, uppercase, wide. */
+@utility label-xs {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/*
+ * Scanline / halftone fill for large decorative type, the texture behind
+ * Trionn's own giant background wordmark. Repeating horizontal lines are
+ * clipped to the glyph shapes themselves rather than laid over the top, so
+ * it reads as the letters being built from lines rather than a filter
+ * stamped on afterward. Text colour must be `transparent` for the clipped
+ * background to show at all — that is the whole mechanism.
+ */
+@utility scanline-text {
+  color: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--color-muted-foreground) 0px,
+    var(--color-muted-foreground) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+/* One fixed grain layer for the whole page, not per section. */
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@utility hairline {
+  border-top: 1px solid var(--color-line);
+}
+
+/*
+ * Card sheen. Reactive writes --px/--py as the pointer moves over the
+ * element; this paints a soft light there. Pure CSS, so the JS side stays
+ * a coordinate reporter and never touches layout.
+ */
+@utility sheen {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.45s var(--ease-soft);
+    background: radial-gradient(
+      300px circle at var(--px, 50%) var(--py, 50%),
+      oklch(0.955 0.004 90 / 0.09),
+      transparent 70%
+    );
+  }
+
+  &:hover::before,
+  &:focus-within::before {
+    opacity: 1;
+  }
+
+  & > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+
+/* The gradient line sweeping across the top of the FAQ card. */
+@keyframes faq-scan {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+
+/* Chat bubbles arriving in the demo. */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The three dots while the assistant is typing. */
+@keyframes dot-pulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+/* Custom cursor replaces the native one, so nothing should show its own. */
+@media (pointer: fine) {
+  body,
+  a,
+  button {
+    cursor: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    /* Otherwise a deliberate stagger, like the process icons arriving
+       before their text, still leaves a visible delay under reduced
+       motion, where everything should just be there. */
+    transition-delay: 0ms !important;
+  }
+}
